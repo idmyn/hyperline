@@ -10,23 +10,23 @@ export default class K8s extends Component {
   constructor(props) {
     super(props)
 
-    this.state = { version: 'Not running' }
-    this.setVersion = this.setVersion.bind(this)
+    this.state = { context: 'no context' }
+    this.setContext = this.setContext.bind(this)
   }
 
-  setVersion() {
-    exec('/usr/local/bin/docker version -f {{.Server.Version}}')
-      .then(version => {
-        this.setState({ version })
+  setContext() {
+    exec('/usr/local/bin/kubectl config current-context')
+      .then(context => {
+        this.setState({ context })
       })
       .catch(() => {
-        this.setState({ version: 'not running' })
+        this.setState({ context: 'no context' })
       })
   }
 
   componentDidMount() {
-    this.setVersion()
-    this.interval = setInterval(() => this.setVersion(), 15000)
+    this.setContext()
+    this.interval = setInterval(() => this.setContext(), 15000)
   }
 
   componentWillUnmount() {
@@ -36,7 +36,7 @@ export default class K8s extends Component {
   render() {
     return (
       <div className='wrapper'>
-        ☸️️ {this.state.version}
+        <span className="icon">☸️️</span>{this.state.context}
 
         <style jsx>{`
           .wrapper {
@@ -53,6 +53,7 @@ function exec(command, options) {
   return new Promise((resolve, reject) => {
     ex(command, options, (err, stdout, stderr) => {
       if (err) {
+        console.log(`${err}\n${stderr}`)
         reject(`${err}\n${stderr}`)
       } else {
         resolve(stdout)
